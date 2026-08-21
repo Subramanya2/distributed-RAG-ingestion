@@ -1,0 +1,42 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Virtual Environment ──
+venv/
+.venv/
+env/
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Environment / Secrets ──
+.env
+.env.*
+!.env.example
+
+# ── Docker ──
+*.log
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Test / Coverage ──
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# ── Load test results ──
+load_tests/results/
