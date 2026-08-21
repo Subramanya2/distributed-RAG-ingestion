@@ -1,0 +1,15 @@
+fastapi[standard]
+uvicorn[standard]
+celery[redis]
+redis
+psycopg2-binary
+pgvector
+sqlalchemy
+sentence-transformers
+pydantic-settings
+python-dotenv
+numpy
+prometheus-client
+pytest
+pytest-cov
+httpx

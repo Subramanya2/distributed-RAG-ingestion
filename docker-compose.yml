@@ -1,0 +1,78 @@
+services:
+  # ── Redis Stack (Broker + RediSearch/RedisJSON for semantic cache) ────
+  redis:
+    image: redis/redis-stack:latest
+    ports:
+      - "6379:6379"
+      - "8001:8001"        # RedisInsight UI (optional)
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - rag_net
+
+  # ── PostgreSQL with pgvector extension ────────────────────────────────
+  db:
+    image: pgvector/pgvector:pg16
+    env_file: .env
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-raguser} -d ${POSTGRES_DB:-ragdb}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - rag_net
+
+  # ── FastAPI Gateway ───────────────────────────────────────────────────
+  api:
+    build: .
+    env_file: .env
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./tests:/app/tests
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - rag_net
+
+  # ── Celery Worker ─────────────────────────────────────────────────────
+  worker:
+    build: .
+    env_file: .env
+    command: >
+      celery -A app.celery_app worker
+      --loglevel=info
+      --concurrency=2
+      --pool=prefork
+    volumes:
+      - ./app:/app/app
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - rag_net
+
+volumes:
+  redis_data:
+  pg_data:
+
+networks:
+  rag_net:
+    driver: bridge
