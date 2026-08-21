@@ -40,3 +40,6 @@ htmlcov/
 
 # ── Load test results ──
 load_tests/results/
+
+# ── Personal / Notes ──
+self.md
